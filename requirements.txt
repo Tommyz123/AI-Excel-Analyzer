@@ -1,0 +1,19 @@
+# Core dependencies
+streamlit>=1.28.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+plotly>=5.17.0
+
+# AI integration (simplified - direct OpenAI API)
+openai>=1.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+psutil>=5.9.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Optional (PDF export)
+reportlab>=4.0.0
