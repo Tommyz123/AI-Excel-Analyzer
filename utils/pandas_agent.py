@@ -161,7 +161,7 @@ result = df['Total'].sum()
             pass
             
         # Use LLM to generate a natural language response based on the result
-        system_prompt = "You are a helpful assistant. Convert the provided code result into a clear, natural language answer in English."
+        system_prompt = "You are a helpful assistant. Convert the provided code result into a clear, natural language answer in English. Ensure the tone is professional and helpful."
         
         user_content = f"""
 Question: {question}

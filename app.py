@@ -23,6 +23,178 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Custom CSS for Minimalist Clean Theme (Apple Style)
+st.markdown("""
+    <style>
+        /* Import Inter font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        /* Global Reset & Typography */
+        html, body, [class*="css"] {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            color: #1D1D1F !important;
+            background-color: #F5F5F7 !important;
+        }
+        
+        /* Hide default header and footer */
+        header {visibility: hidden;}
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        
+        /* Custom Navbar Styling - Glassmorphism */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 0.8rem 2rem;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #1D1D1F;
+        }
+        
+        /* Adjust main content padding for fixed navbar */
+        .main .block-container {
+            padding-top: 6rem !important;
+            max-width: 1200px !important;
+        }
+        
+        /* Card Styling (Minimalist) */
+        .saas-card {
+            background-color: #FFFFFF;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            margin-bottom: 20px;
+            border: none;
+            transition: transform 0.2s ease;
+        }
+        
+        .saas-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        }
+        
+        .metric-label {
+            color: #86868B;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        
+        .metric-value {
+            color: #1D1D1F;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+        
+        /* Streamlit Metric Override */
+        div[data-testid="stMetric"] {
+            background-color: #FFFFFF !important;
+            border: none !important;
+            padding: 20px !important;
+            border-radius: 16px !important;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04) !important;
+        }
+        
+        div[data-testid="stMetricLabel"] {
+            color: #86868B !important;
+        }
+        
+        div[data-testid="stMetricValue"] {
+            color: #1D1D1F !important;
+        }
+        
+        /* Sidebar Styling */
+        section[data-testid="stSidebar"] {
+            background-color: #FFFFFF !important;
+            border-right: 1px solid rgba(0,0,0,0.05) !important;
+            top: 0 !important; /* Fix for some streamlit versions */
+            padding-top: 4rem !important;
+        }
+        
+        /* Button Styling - Apple Blue */
+        div.stButton > button {
+            background-color: #007AFF !important;
+            color: white !important;
+            border-radius: 999px !important; /* Pill shape */
+            border: none !important;
+            padding: 0.6rem 1.5rem !important;
+            font-weight: 500 !important;
+            font-size: 0.95rem !important;
+            box-shadow: 0 2px 10px rgba(0, 122, 255, 0.2) !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        div.stButton > button:hover {
+            background-color: #0062CC !important;
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3) !important;
+        }
+        
+        /* Secondary/Download Buttons */
+        div.stDownloadButton > button {
+            background-color: #F5F5F7 !important;
+            color: #007AFF !important;
+            border: 1px solid rgba(0,0,0,0.05) !important;
+        }
+        
+        div.stDownloadButton > button:hover {
+            background-color: #E5E5EA !important;
+            border-color: rgba(0,0,0,0.1) !important;
+        }
+        
+        /* Inputs */
+        .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+            border-radius: 12px !important;
+            border: 1px solid #E5E5EA !important;
+            background-color: #FFFFFF !important;
+            padding: 10px !important;
+        }
+        
+        .stTextInput input:focus, .stSelectbox div[data-baseweb="select"]:focus-within {
+            border-color: #007AFF !important;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1) !important;
+        }
+        
+        /* Charts Container */
+        .js-plotly-plot {
+            background-color: #FFFFFF;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        }
+        
+    </style>
+    
+    <!-- Custom Navbar HTML -->
+    <div class="navbar">
+        <div class="navbar-brand">
+            <span>📊</span> AI Sales Analyzer
+        </div>
+        <div style="font-size: 0.8rem; color: #86868B;">
+            Professional Edition
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
 # Initialize session state
 if 'df' not in st.session_state:
     st.session_state.df = None
@@ -150,30 +322,38 @@ def show_api_usage():
 def show_dashboard(analyzer: SalesAnalyzer):
     """Display main dashboard with metrics and charts"""
     
-    # Key metrics
-    stats = analyzer.get_summary_stats()
+    # Key metrics (Custom SaaS Cards)
+    with st.container():
+        st.markdown("### 📈 核心指标")
+        stats = analyzer.get_summary_stats()
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown(f"""
+                <div class="saas-card">
+                    <div class="metric-label">{UI_TEXT["total_sales"]}</div>
+                    <div class="metric-value">${stats['total_sales']:,.2f}</div>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+                <div class="saas-card">
+                    <div class="metric-label">{UI_TEXT["order_count"]}</div>
+                    <div class="metric-value">{stats['order_count']:,}</div>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f"""
+                <div class="saas-card">
+                    <div class="metric-label">{UI_TEXT["avg_order"]}</div>
+                    <div class="metric-value">${stats['avg_order_value']:.2f}</div>
+                </div>
+            """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric(
-            UI_TEXT["total_sales"],
-            f"${stats['total_sales']:,.2f}"
-        )
-    
-    with col2:
-        st.metric(
-            UI_TEXT["order_count"],
-            f"{stats['order_count']:,}"
-        )
-    
-    with col3:
-        st.metric(
-            UI_TEXT["avg_order"],
-            f"${stats['avg_order_value']:.2f}"
-        )
-    
-    st.divider()
+    st.markdown("---")
     
     # Charts
     col_left, col_right = st.columns(2)
@@ -264,7 +444,7 @@ def show_export_section(analyzer: SalesAnalyzer):
 
 
 def show_ai_assistant(analyzer: SalesAnalyzer, api_key: str):
-    """Display AI Q&A interface"""
+    """Display AI Q&A interface with chat history and download"""
     st.divider()
     st.subheader(UI_TEXT["ai_qa_title"])
     st.markdown(f"*{UI_TEXT['ai_qa_subtitle']}*")
@@ -279,72 +459,80 @@ def show_ai_assistant(analyzer: SalesAnalyzer, api_key: str):
         except Exception as e:
             st.error(f"Failed to initialize AI Agent: {str(e)}")
             return
+            
+    # Initialize chat history
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
     
     # Check if API key is valid
-    # Simple validation: check if key exists and looks roughly right
     if not api_key or not api_key.strip() or api_key == "your-api-key-here":
         st.warning(UI_TEXT["error_api_key"])
-        
-        # Show debugging info
-        with st.expander("🔍 API Key Debug Info"):
-            if not api_key:
-                st.error("❌ No API key provided")
-                st.info("Please enter your OpenAI API key in the sidebar above, or add it to the .env file")
-            elif not api_key.strip():
-                st.error("❌ API key is empty or whitespace")
-            elif api_key == "your-api-key-here":
-                st.error("❌ API key is still the placeholder value")
-                st.info("Please replace 'your-api-key-here' with your actual OpenAI API key")
-            elif not api_key.startswith('sk-'):
-                st.error("❌ API key format is invalid")
-                st.info("OpenAI API keys should start with 'sk-'")
-                st.code(f"Current key starts with: {api_key[:10]}...")
-            else:
-                st.warning("⚠️ API key looks valid but validation failed")
-                st.code(f"Key: {api_key[:10]}...{api_key[-4:]}")
-        
-        st.info("💡 You can still use the dashboard and export features without AI.")
         return
-    
-    # Show API key status (success)
-    with st.expander("✅ API Key Status"):
-        st.success(f"API key configured: {api_key[:10]}...{api_key[-4:]}")
-    
-    # Example questions
-    with st.expander("💡 Example Questions"):
-        for example in UI_TEXT["ai_qa_examples"]:
-            st.markdown(f"- {example}")
-    
-    # Question input
-    question = st.text_input(
-        "Your question:",
-        placeholder=UI_TEXT["ai_qa_placeholder"]
-    )
-    
-    if question:
-        # Check API limits
-        controller = CostController()
-        can_call, message = controller.can_make_call()
+
+    # Chat Interface Container
+    with st.container():
+        # Display chat history
+        for message in st.session_state.chat_history:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
         
-        if not can_call:
-            st.error(UI_TEXT["error_api_limit"].format(message=message))
-            return
-        
-        # Get answer
-        with st.spinner(UI_TEXT["ai_thinking"]):
-            answer = st.session_state.ai_agent.ask(question)
+        # Welcome message if history is empty
+        if not st.session_state.chat_history:
+            with st.chat_message("assistant"):
+                st.write(f"👋 {UI_TEXT['ai_qa_subtitle']}")
+                st.markdown("**您可以试着问我：**")
+                for example in UI_TEXT["ai_qa_examples"][:3]:
+                    st.markdown(f"- {example}")
+
+        # Question input
+        if question := st.chat_input(UI_TEXT["ai_qa_placeholder"]):
+            # Add user message to history
+            st.session_state.chat_history.append({"role": "user", "content": question})
             
-            # Record API call (PandasAgent always uses API)
-            controller.record_call()
-        
-        # Display answer
-        st.markdown(UI_TEXT["ai_answer_prefix"])
-        st.write(answer)
+            # Display user message immediately
+            with st.chat_message("user"):
+                st.write(question)
+
+            # Check API limits
+            controller = CostController()
+            can_call, message = controller.can_make_call()
+            
+            if not can_call:
+                st.error(UI_TEXT["error_api_limit"].format(message=message))
+                return
+            
+            # Get answer
+            with st.chat_message("assistant"):
+                with st.spinner(UI_TEXT["ai_thinking"]):
+                    answer = st.session_state.ai_agent.ask(question)
+                    
+                    # Record API call
+                    controller.record_call()
+                    
+                    st.markdown(answer)
+                    
+                    # Add assistant response to history
+                    st.session_state.chat_history.append({"role": "assistant", "content": answer})
+
+    # Download Chat History
+    if st.session_state.chat_history:
+        st.divider()
+        chat_text = "AI Sales Analyzer - Chat History\n================================\n\n"
+        for msg in st.session_state.chat_history:
+            role = "User" if msg["role"] == "user" else "AI"
+            chat_text += f"{role}:\n{msg['content']}\n\n{'-'*40}\n\n"
+            
+        st.download_button(
+            label="📥 下载对话记录",
+            data=chat_text,
+            file_name="chat_history.txt",
+            mime="text/plain"
+        )
 
 
 def main():
     """Main application logic"""
-    show_header()
+    # show_header() # Disabled for custom navbar
     
     # Sidebar
     uploaded_file, api_key = show_sidebar()
