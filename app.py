@@ -269,6 +269,120 @@ if 'cache_cleared' not in st.session_state:
 
 
 
+def show_hero_page():
+    """
+    Display hero/welcome page with slogan and 3-step process
+
+    设计考虑：
+    - 使用ChartColors配色保持一致性
+    - 简洁的3步流程说明
+    - 友好的视觉引导
+    """
+    st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
+
+    # Hero Slogan
+    st.markdown(f"""
+        <div style='text-align: center; padding: 3rem 1rem 2rem 1rem;'>
+            <h1 style='font-size: 2.8rem; font-weight: 700; color: {ChartColors.PRIMARY};
+                       margin-bottom: 1rem; letter-spacing: -0.02em;'>
+                30秒看懂你的数据
+            </h1>
+            <p style='font-size: 1.3rem; color: #86868B; font-weight: 400;'>
+                AI驱动的Excel分析 - 让数据洞察变得简单
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
+
+    # 3-Step Process Cards
+    st.markdown("""
+        <div style='text-align: center; margin-bottom: 1rem;'>
+            <h3 style='color: #1D1D1F; font-weight: 600;'>三步开始分析</h3>
+        </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown(f"""
+            <div class='saas-card' style='text-align: center; min-height: 240px;'>
+                <div style='font-size: 3rem; margin-bottom: 1rem;'>📤</div>
+                <h4 style='color: {ChartColors.PRIMARY}; font-weight: 600; margin-bottom: 0.8rem;'>
+                    1. 上传Excel
+                </h4>
+                <p style='color: #86868B; font-size: 0.95rem; line-height: 1.6;'>
+                    支持 .xlsx, .xls, .csv 格式<br/>
+                    自动识别表头和数据类型<br/>
+                    灵活处理各种格式
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+            <div class='saas-card' style='text-align: center; min-height: 240px;'>
+                <div style='font-size: 3rem; margin-bottom: 1rem;'>🤖</div>
+                <h4 style='color: {ChartColors.ACCENT}; font-weight: 600; margin-bottom: 0.8rem;'>
+                    2. AI分析
+                </h4>
+                <p style='color: #86868B; font-size: 0.95rem; line-height: 1.6;'>
+                    自动生成可视化图表<br/>
+                    智能发现业务洞察<br/>
+                    提供优化建议
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(f"""
+            <div class='saas-card' style='text-align: center; min-height: 240px;'>
+                <div style='font-size: 3rem; margin-bottom: 1rem;'>📊</div>
+                <h4 style='color: #34C759; font-weight: 600; margin-bottom: 0.8rem;'>
+                    3. 导出报告
+                </h4>
+                <p style='color: #86868B; font-size: 0.95rem; line-height: 1.6;'>
+                    一键导出PDF报告<br/>
+                    保存分析结果<br/>
+                    随时分享团队
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
+
+    # Call to Action
+    st.markdown("""
+        <div style='text-align: center;'>
+            <p style='color: #86868B; font-size: 1rem; margin-bottom: 1.5rem;'>
+                👈 从左侧边栏上传文件开始，或加载Demo数据体验
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Feature highlights
+    st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
+
+    col_a, col_b, col_c, col_d = st.columns(4)
+
+    features = [
+        ("⚡", "快速分析", "秒级处理数据"),
+        ("🎯", "精准洞察", "AI驱动智能"),
+        ("📈", "专业图表", "可视化呈现"),
+        ("🔒", "数据安全", "本地处理")
+    ]
+
+    for col, (icon, title, desc) in zip([col_a, col_b, col_c, col_d], features):
+        with col:
+            st.markdown(f"""
+                <div style='text-align: center; padding: 1rem;'>
+                    <div style='font-size: 2rem; margin-bottom: 0.5rem;'>{icon}</div>
+                    <div style='font-weight: 600; color: #1D1D1F; margin-bottom: 0.3rem;'>{title}</div>
+                    <div style='font-size: 0.85rem; color: #86868B;'>{desc}</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+
 def show_header():
     """Display application header"""
     st.title(f"{Config.APP_ICON} {UI_TEXT['app_title']}")
@@ -631,9 +745,8 @@ def main():
             st.info("Please check your file format and try again. Download our template for reference.")
     
     else:
-        # Welcome screen
-        st.info(UI_TEXT["welcome_message"])
-        st.markdown(UI_TEXT["usage_steps"])
+        # Hero/Welcome screen with redesigned UI
+        show_hero_page()
 
 
 if __name__ == "__main__":
