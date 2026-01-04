@@ -443,7 +443,35 @@ def show_sidebar():
         # Format guide
         with st.expander(UI_TEXT["format_guide_title"]):
             st.markdown(UI_TEXT["format_guide_content"])
-        
+
+        # Demo Data Loader (New Feature)
+        st.divider()
+        st.subheader("📦 体验Demo数据")
+
+        demo_type = st.selectbox(
+            "选择场景",
+            ["", "电商场景 (E-commerce)", "餐饮场景 (Restaurant)", "零售场景 (Retail)"],
+            key="demo_selector"
+        )
+
+        if demo_type and st.button("🚀 加载Demo数据", key="load_demo", use_container_width=True):
+            with st.spinner("正在生成Demo数据..."):
+                try:
+                    if "电商" in demo_type:
+                        demo_df = TemplateGenerator.generate_ecommerce_data()
+                    elif "餐饮" in demo_type:
+                        demo_df = TemplateGenerator.generate_restaurant_data()
+                    else:
+                        demo_df = TemplateGenerator.generate_retail_data()
+
+                    st.session_state.df = demo_df
+                    st.session_state.analyzer = SalesAnalyzer(demo_df)
+                    st.session_state.ai_agent = None  # Reset AI agent
+                    st.success(f"✅ {demo_type}数据已加载（{len(demo_df)}条记录）")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Demo数据加载失败: {str(e)}")
+
         # Privacy notice
         st.divider()
         with st.expander(UI_TEXT["privacy_title"]):
