@@ -929,6 +929,103 @@ def show_enhanced_metrics(analyzer):
         """, unsafe_allow_html=True)
 
 
+def show_comparison_section(analyzer):
+    """
+    显示周/月对比section
+
+    升级内容：
+    - 自动检测数据范围（>=14天显示周对比，>=60天显示月对比）
+    - 增长率：绿↑正增长，红↓负增长
+    - 3个对比卡片：销售额、订单量、平均订单
+    """
+    week_comp = analyzer.get_week_comparison()
+    month_comp = analyzer.get_month_comparison()
+
+    # 如果两个对比都不可用，不显示
+    if week_comp is None and month_comp is None:
+        return
+
+    st.markdown("---")
+    st.subheader("📊 期间对比分析")
+
+    # 优先显示周对比（数据更新鲜）
+    comparison = week_comp if week_comp is not None else month_comp
+    period_type = "周" if week_comp is not None else "月"
+    current_key = 'current_week' if week_comp is not None else 'current_month'
+    previous_key = 'previous_week' if week_comp is not None else 'previous_month'
+
+    col1, col2, col3 = st.columns(3)
+
+    # 卡片1：增长率
+    with col1:
+        growth = comparison['growth_rate']
+
+        if growth == 'N/A':
+            arrow = ""
+            color = "#86868B"
+            growth_display = "N/A"
+        elif growth > 0:
+            arrow = "↑"
+            color = "#28a745"  # 绿色
+            growth_display = f"+{growth:.1f}%"
+        elif growth < 0:
+            arrow = "↓"
+            color = "#dc3545"  # 红色
+            growth_display = f"{growth:.1f}%"
+        else:
+            arrow = "→"
+            color = "#86868B"
+            growth_display = "0%"
+
+        st.markdown(f"""
+            <div class="saas-card" style="text-align: center; padding: 25px;">
+                <div style="color: #86868B; font-size: 0.9rem; margin-bottom: 12px;">
+                    {period_type}销售额增长
+                </div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: {color}; margin: 10px 0;">
+                    {arrow} {growth_display}
+                </div>
+                <div style="font-size: 0.8rem; color: #86868B; margin-top: 10px;">
+                    本{period_type} vs 上{period_type}
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # 卡片2：本周销售额
+    with col2:
+        current_sales = comparison[current_key]
+        st.markdown(f"""
+            <div class="saas-card" style="text-align: center; padding: 25px;">
+                <div style="color: #86868B; font-size: 0.9rem; margin-bottom: 12px;">
+                    💰 本{period_type}销售
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 700; color: {ChartColors.PRIMARY}; margin: 10px 0;">
+                    ${current_sales:,.2f}
+                </div>
+                <div style="font-size: 0.8rem; color: #86868B; margin-top: 10px;">
+                    {comparison['current_orders']} 笔订单
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # 卡片3：上周销售额
+    with col3:
+        previous_sales = comparison[previous_key]
+        st.markdown(f"""
+            <div class="saas-card" style="text-align: center; padding: 25px;">
+                <div style="color: #86868B; font-size: 0.9rem; margin-bottom: 12px;">
+                    📦 上{period_type}销售
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 700; color: #86868B; margin: 10px 0;">
+                    ${previous_sales:,.2f}
+                </div>
+                <div style="font-size: 0.8rem; color: #86868B; margin-top: 10px;">
+                    {comparison['previous_orders']} 笔订单
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+
 def show_categorized_insights(analyzer):
     """
     显示分类洞察（3列布局 - 机会/风险/趋势）
@@ -1042,6 +1139,9 @@ def show_dashboard(analyzer: SalesAnalyzer):
     else:
         st.info("暂无每日销售数据")
     
+    # Period Comparison (周/月对比)
+    show_comparison_section(analyzer)
+
     # Business Insights (优化版 - 分类显示)
     st.divider()
     show_categorized_insights(analyzer)

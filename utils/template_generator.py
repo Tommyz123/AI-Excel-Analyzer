@@ -138,7 +138,7 @@ class TemplateGenerator:
             price = round(random.uniform(*price_range), 2)
             quantity = random.randint(1, 3)  # 电商一般少量购买
 
-            day_offset = random.randint(0, 13)
+            day_offset = random.randint(0, 14)  # 0-14共15天，确保>=14天
             order_date = start_date + timedelta(days=day_offset)
 
             # 周末订单更多（70%概率）
@@ -174,7 +174,7 @@ class TemplateGenerator:
         }
 
         states = ['CA', 'NY', 'TX', 'FL', 'IL', 'PA']
-        start_date = datetime.now() - timedelta(days=10)
+        start_date = datetime.now() - timedelta(days=14)
 
         data = []
         for i in range(num_rows):
@@ -183,7 +183,7 @@ class TemplateGenerator:
             price = round(random.uniform(*price_range), 2)
             quantity = random.randint(1, 4)  # 餐饮可能多份
 
-            day_offset = random.randint(0, 9)
+            day_offset = random.randint(0, 14)  # 0-14共15天，确保>=14天
             order_date = start_date + timedelta(days=day_offset)
 
             # 周末订单更多（60%概率增加）
@@ -220,7 +220,7 @@ class TemplateGenerator:
         }
 
         states = ['CA', 'NY', 'TX', 'FL', 'IL', 'OH', 'PA']
-        start_date = datetime.now() - timedelta(days=12)
+        start_date = datetime.now() - timedelta(days=14)
 
         data = []
         for i in range(num_rows):
@@ -229,7 +229,7 @@ class TemplateGenerator:
             price = round(random.uniform(*price_range), 2)
             quantity = random.randint(1, 5)  # 零售可能批量购买
 
-            day_offset = random.randint(0, 11)
+            day_offset = random.randint(0, 14)  # 0-14共15天，确保>=14天
             order_date = start_date + timedelta(days=day_offset)
 
             data.append({

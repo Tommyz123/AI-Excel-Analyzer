@@ -354,3 +354,102 @@ class SalesAnalyzer:
         # Order by weekday
         day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         return weekday_sales.reindex([day for day in day_order if day in weekday_sales.index])
+
+    def get_week_comparison(self) -> Dict[str, Any]:
+        """
+        本周vs上周对比（最近7天 vs 之前7天）
+
+        Returns:
+            Dict or None: {
+                'current_week': float,      # 本周销售额
+                'previous_week': float,     # 上周销售额
+                'growth_rate': float/str,   # 增长率（百分比）或'N/A'
+                'status': str,              # 'increase' 或 'decrease'
+                'current_orders': int,      # 本周订单数
+                'previous_orders': int      # 上周订单数
+            }
+            如果数据不足14天，返回None
+        """
+        if 'Date' not in self.df.columns:
+            return None
+
+        df_sorted = self.df.sort_values('Date')
+
+        # 检查数据范围（需要至少14天数据）
+        date_range = (df_sorted['Date'].max() - df_sorted['Date'].min()).days
+        if date_range < 14:
+            return None
+
+        # 获取最近14天数据
+        latest_date = df_sorted['Date'].max()
+        two_weeks_ago = latest_date - pd.Timedelta(days=14)
+        recent_data = df_sorted[df_sorted['Date'] > two_weeks_ago]
+
+        # 分割本周和上周（各7天）
+        one_week_ago = latest_date - pd.Timedelta(days=7)
+        current_week_data = recent_data[recent_data['Date'] > one_week_ago]
+        previous_week_data = recent_data[recent_data['Date'] <= one_week_ago]
+
+        # 计算指标
+        current_week_sales = current_week_data['Total'].sum()
+        previous_week_sales = previous_week_data['Total'].sum()
+        current_week_orders = len(current_week_data)
+        previous_week_orders = len(previous_week_data)
+
+        # 计算增长率（使用安全函数）
+        growth_rate = safe_percentage_change(current_week_sales, previous_week_sales)
+
+        return {
+            'current_week': current_week_sales,
+            'previous_week': previous_week_sales,
+            'growth_rate': growth_rate,
+            'status': 'increase' if (growth_rate != 'N/A' and growth_rate > 0) else 'decrease',
+            'current_orders': current_week_orders,
+            'previous_orders': previous_week_orders
+        }
+
+    def get_month_comparison(self) -> Dict[str, Any]:
+        """
+        本月vs上月对比（最近30天 vs 之前30天）
+
+        Returns:
+            Dict or None: 同get_week_comparison结构
+            如果数据不足60天，返回None
+        """
+        if 'Date' not in self.df.columns:
+            return None
+
+        df_sorted = self.df.sort_values('Date')
+
+        # 检查数据范围（需要至少60天数据）
+        date_range = (df_sorted['Date'].max() - df_sorted['Date'].min()).days
+        if date_range < 60:
+            return None
+
+        # 获取最近60天数据
+        latest_date = df_sorted['Date'].max()
+        two_months_ago = latest_date - pd.Timedelta(days=60)
+        recent_data = df_sorted[df_sorted['Date'] > two_months_ago]
+
+        # 分割本月和上月（各30天）
+        one_month_ago = latest_date - pd.Timedelta(days=30)
+        current_month_data = recent_data[recent_data['Date'] > one_month_ago]
+        previous_month_data = recent_data[recent_data['Date'] <= one_month_ago]
+
+        # 计算指标
+        current_month_sales = current_month_data['Total'].sum()
+        previous_month_sales = previous_month_data['Total'].sum()
+        current_month_orders = len(current_month_data)
+        previous_month_orders = len(previous_month_data)
+
+        # 计算增长率
+        growth_rate = safe_percentage_change(current_month_sales, previous_month_sales)
+
+        return {
+            'current_month': current_month_sales,
+            'previous_month': previous_month_sales,
+            'growth_rate': growth_rate,
+            'status': 'increase' if (growth_rate != 'N/A' and growth_rate > 0) else 'decrease',
+            'current_orders': current_month_orders,
+            'previous_orders': previous_month_orders
+        }
