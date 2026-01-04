@@ -901,6 +901,83 @@ def show_enhanced_metrics(analyzer):
         """, unsafe_allow_html=True)
 
 
+def show_categorized_insights(analyzer):
+    """
+    显示分类洞察（3列布局 - 机会/风险/趋势）
+
+    升级内容：
+    - 按category分组显示
+    - 使用expander折叠面板节省空间
+    - 每个洞察有emoji、标题、详细说明
+    - 背景色区分不同类别
+    """
+    insights = analyzer.detect_anomalies()
+
+    if not insights:
+        st.info("📊 暂无异常洞察数据")
+        return
+
+    st.subheader("🤖 AI 业务洞察")
+
+    # 按类别分组
+    opportunities = [i for i in insights if i['category'] == 'opportunity']
+    risks = [i for i in insights if i['category'] == 'risk']
+    trends = [i for i in insights if i['category'] == 'trend']
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown(f"""
+            <div style="background: {ChartColors.SUCCESS}; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0; color: #1D1D1F;">🔥 机会 ({len(opportunities)})</h4>
+            </div>
+        """, unsafe_allow_html=True)
+
+        for insight in opportunities:
+            with st.expander(f"{insight['emoji']} {insight['title']}", expanded=False):
+                st.markdown(f"""
+                    <div style="background-color: {insight['color']};
+                                padding: 15px; border-radius: 8px;
+                                border-left: 4px solid {ChartColors.PRIMARY};">
+                        {insight['detail']}
+                    </div>
+                """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+            <div style="background: {ChartColors.WARNING}; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0; color: #1D1D1F;">⚠️ 风险 ({len(risks)})</h4>
+            </div>
+        """, unsafe_allow_html=True)
+
+        for insight in risks:
+            with st.expander(f"{insight['emoji']} {insight['title']}", expanded=False):
+                st.markdown(f"""
+                    <div style="background-color: {insight['color']};
+                                padding: 15px; border-radius: 8px;
+                                border-left: 4px solid {ChartColors.ACCENT};">
+                        {insight['detail']}
+                    </div>
+                """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(f"""
+            <div style="background: {ChartColors.INFO}; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0; color: #1D1D1F;">📊 趋势 ({len(trends)})</h4>
+            </div>
+        """, unsafe_allow_html=True)
+
+        for insight in trends:
+            with st.expander(f"{insight['emoji']} {insight['title']}", expanded=False):
+                st.markdown(f"""
+                    <div style="background-color: {insight['color']};
+                                padding: 15px; border-radius: 8px;
+                                border-left: 4px solid #007AFF;">
+                        {insight['detail']}
+                    </div>
+                """, unsafe_allow_html=True)
+
+
 def show_dashboard(analyzer: SalesAnalyzer):
     """Display main dashboard with metrics and charts"""
     
@@ -937,16 +1014,9 @@ def show_dashboard(analyzer: SalesAnalyzer):
     else:
         st.info("暂无每日销售数据")
     
-    # Business Insights
+    # Business Insights (优化版 - 分类显示)
     st.divider()
-    st.subheader(UI_TEXT["insights"])
-    insights = analyzer.detect_anomalies()
-    
-    if insights:
-        for insight in insights:
-            st.info(insight)
-    else:
-        st.info("No unusual patterns detected. Sales are consistent!")
+    show_categorized_insights(analyzer)
 
 
 def show_export_section(analyzer: SalesAnalyzer):
