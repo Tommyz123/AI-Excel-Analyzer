@@ -456,6 +456,127 @@ def show_sidebar():
         return uploaded_file, api_key
 
 
+# ==================== 工具函数（未来可提取为utils/formatting.py）====================
+def safe_divide(numerator, denominator, fallback='N/A'):
+    """
+    安全除法，防止除零错误
+
+    Args:
+        numerator: 分子
+        denominator: 分母
+        fallback: 除零时的返回值
+
+    Returns:
+        除法结果或fallback值
+
+    设计考虑：
+    - ✅ 当前：在app.py中定义，避免文件碎片化
+    - 🔄 未来：如需复用，可提取为 utils/formatting.py
+    - 🔄 扩展性：添加文档字符串，便于测试和维护
+    """
+    if denominator == 0 or denominator is None:
+        return fallback
+    try:
+        return numerator / denominator
+    except (ZeroDivisionError, TypeError):
+        return fallback
+
+
+def format_currency(value, currency='$'):
+    """
+    格式化货币显示
+
+    Args:
+        value: 金额（可以是数字或'N/A'）
+        currency: 货币符号
+
+    Returns:
+        格式化后的字符串（如$1,234.56或N/A）
+    """
+    if value == 'N/A' or value is None:
+        return 'N/A'
+    try:
+        return f"{currency}{float(value):,.2f}"
+    except (ValueError, TypeError):
+        return 'N/A'
+
+
+def format_number(value, precision=0):
+    """格式化数字（千位分隔符）"""
+    if value == 'N/A' or value is None:
+        return 'N/A'
+    try:
+        if precision == 0:
+            return f"{int(value):,}"
+        else:
+            return f"{float(value):,.{precision}f}"
+    except (ValueError, TypeError):
+        return 'N/A'
+# ===============================================================================
+
+
+# ==================== 图表创建函数（优化版）====================
+def create_top_products_chart(analyzer):
+    """
+    创建Top Products横向条形图（优化版）
+
+    升级内容：
+    - 横向条形图（更美观）
+    - 深蓝色渐变（ChartColors.PRIMARY）
+    - 条内显示数值（白色文字）
+    - 优化hover提示
+    - 统一高度450px
+    - 标题18px加粗居中
+    """
+    top_products = analyzer.get_top_products()
+
+    if top_products.empty:
+        return None
+
+    fig = go.Figure(go.Bar(
+        x=top_products.values,
+        y=top_products.index,
+        orientation='h',
+        marker=dict(
+            color=ChartColors.PRIMARY,
+            line=dict(width=0)
+        ),
+        text=[f'{int(val):,}' for val in top_products.values],
+        textposition='inside',
+        textfont=dict(color='white', size=14, family='Inter'),
+        hovertemplate='<b>%{y}</b><br>销量: %{x:,} 件<extra></extra>'
+    ))
+
+    fig.update_layout(
+        title=dict(
+            text='🏆 畅销产品 Top 5',
+            font=dict(size=UIConfig.TITLE_FONT_SIZE, family='Inter', weight=600),
+            x=0.5,
+            xanchor='center'
+        ),
+        xaxis_title='销量（件）',
+        yaxis_title='',
+        height=UIConfig.CHART_HEIGHT,
+        showlegend=False,
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        margin=dict(l=20, r=20, t=60, b=40),
+        xaxis=dict(
+            showgrid=True,
+            gridcolor='rgba(0,0,0,0.05)',
+            tickformat=',d'
+        ),
+        yaxis=dict(
+            showgrid=False,
+            autorange='reversed'  # Top product at the top
+        ),
+        font=dict(family='Inter', color='#1D1D1F')
+    )
+
+    return fig
+# ===============================================================================
+
+
 def show_api_usage():
     """Display API usage statistics"""
     controller = CostController()
@@ -526,20 +647,12 @@ def show_dashboard(analyzer: SalesAnalyzer):
     col_left, col_right = st.columns(2)
     
     with col_left:
-        # Top 5 Products
-        st.subheader(UI_TEXT["top_products"])
-        top_products = analyzer.get_top_products()
-        
-        fig1 = px.bar(
-            x=top_products.values,
-            y=top_products.index,
-            orientation='h',
-            labels={'x': 'Quantity Sold', 'y': 'Product'},
-            color=top_products.values,
-            color_continuous_scale='Blues'
-        )
-        fig1.update_layout(showlegend=False, height=400)
-        st.plotly_chart(fig1, use_container_width=True)
+        # Top 5 Products (优化版图表)
+        fig1 = create_top_products_chart(analyzer)
+        if fig1:
+            st.plotly_chart(fig1, use_container_width=True)
+        else:
+            st.info("暂无产品数据")
     
     with col_right:
         # Sales by State
