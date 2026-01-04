@@ -15,6 +15,42 @@ from utils.template_generator import TemplateGenerator
 from utils.cost_controller import CostController
 
 
+# ==================== 配置常量（未来可提取为config_extended.py）====================
+class ChartColors:
+    """
+    图表配色方案（便于统一修改和主题切换）
+
+    设计考虑：
+    - ✅ 当前：直接在代码中定义，简单快速
+    - 🔄 未来：可一键提取为 config_extended.py（只需剪切粘贴+import）
+    - 🔄 扩展性：便于支持多主题（深色模式、高对比度等）
+    """
+    PRIMARY = '#1f77b4'      # 深蓝 - 主要图表色
+    ACCENT = '#ff7f0e'       # 橙色 - 强调/高亮色
+    LIGHT_BLUE = '#aec7e8'   # 浅蓝 - 填充色
+    APPLE_BLUE = '#007AFF'   # Apple蓝 - 按钮色
+    SUCCESS = '#d4edda'      # 绿色 - 成功/机会背景
+    WARNING = '#fff3cd'      # 黄色 - 警告背景
+    DANGER = '#f8d7da'       # 红色 - 危险/错误背景
+    INFO = '#d1ecf1'         # 信息蓝 - 提示背景
+
+class UIConfig:
+    """
+    UI配置（便于后续扩展）
+
+    设计考虑：
+    - ✅ 当前：集中定义常量，避免魔法数字
+    - 🔄 未来：可扩展为响应式配置、A/B测试等
+    """
+    CHART_HEIGHT = 450           # 图表默认高度
+    CHART_HEIGHT_MOBILE = 300    # 移动端图表高度
+    TITLE_FONT_SIZE = 18         # 图表标题字号
+    LINE_WIDTH = 4               # 折线图线宽
+    MARKER_SIZE = 8              # 数据点标记大小
+    BORDER_RADIUS = 16           # 卡片圆角
+# ===============================================================================
+
+
 # Page configuration
 st.set_page_config(
     page_title=Config.APP_TITLE,
@@ -26,6 +62,23 @@ st.set_page_config(
 # Custom CSS for Minimalist Clean Theme (Apple Style)
 st.markdown("""
     <style>
+        /* CSS Color Variables - Centralized Theme Management */
+        :root {
+            --primary-blue: #1f77b4;      /* Deep blue for primary charts */
+            --accent-orange: #ff7f0e;     /* Orange for highlights/accents */
+            --light-blue: #aec7e8;        /* Light blue for fills */
+            --apple-blue: #007AFF;        /* Apple system blue for buttons */
+            --success-green: #d4edda;     /* Success/opportunity background */
+            --warning-yellow: #fff3cd;    /* Warning background */
+            --danger-red: #f8d7da;        /* Danger/error background */
+            --info-blue: #d1ecf1;         /* Info background */
+            --text-primary: #1D1D1F;      /* Primary text color */
+            --text-secondary: #86868B;    /* Secondary/muted text */
+            --bg-primary: #F5F5F7;        /* Page background */
+            --bg-card: #FFFFFF;           /* Card/widget background */
+            --border-light: rgba(0,0,0,0.05);
+        }
+
         /* Import Inter font */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
@@ -454,7 +507,8 @@ def show_ai_assistant(analyzer: SalesAnalyzer, api_key: str):
         try:
             st.session_state.ai_agent = PandasAgent(
                 st.session_state.df,
-                api_key
+                api_key,
+                debug_mode=True  # Enable debug mode to show generated code
             )
         except Exception as e:
             st.error(f"Failed to initialize AI Agent: {str(e)}")
