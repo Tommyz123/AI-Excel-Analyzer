@@ -11,24 +11,30 @@ class PandasAgent:
     This ensures 100% accuracy for calculations.
     """
     
-    def __init__(self, df: pd.DataFrame, api_key: str):
+    def __init__(self, df: pd.DataFrame, api_key: str, debug_mode: bool = False):
         """
         Initialize the Pandas Agent
-        
+
         Args:
             df: The pandas DataFrame to analyze
             api_key: OpenAI API key
+            debug_mode: If True, store generated code and results for debugging
         """
         self.df = df
         self.api_key = api_key
-        
+        self.debug_mode = debug_mode
+
         # Initialize OpenAI client
         self.client = openai.OpenAI(api_key=api_key)
-        
+
         # Get dataframe info for the prompt
         self.columns = list(df.columns)
         self.dtypes = df.dtypes.to_dict()
         self.sample_data = df.head(3).to_string()
+
+        # Debug info storage
+        self.last_generated_code = None
+        self.last_result = None
         
     def ask(self, question: str) -> str:
         """
@@ -36,24 +42,38 @@ class PandasAgent:
         """
         max_retries = 3
         last_error = None
-        
+
         for attempt in range(max_retries):
             try:
                 # 1. Generate Code (pass error if retrying)
                 code = self._generate_code(question, last_error, attempt + 1)
-                
+
+                # Store for debugging
+                if self.debug_mode:
+                    self.last_generated_code = code
+
                 # 2. Execute Code
                 result, output = self._execute_code(code)
-                
+
+                # Store for debugging
+                if self.debug_mode:
+                    self.last_result = result
+
                 # 3. Format Answer
                 final_answer = self._format_answer(question, code, result, output)
+
+                # Add debug info if enabled
+                if self.debug_mode:
+                    debug_info = f"\n\n---\n**🔧 Debug Info:**\n```python\n{code}\n```\n**Result:** `{result}`"
+                    return final_answer + debug_info
+
                 return final_answer
-                
+
             except Exception as e:
                 last_error = str(e)
                 print(f"⚠️ Attempt {attempt + 1} failed: {last_error}")
                 # Continue to next attempt
-        
+
         return f"❌ Failed to answer after {max_retries} attempts. Last error: {last_error}"
 
     def _generate_code(self, question: str, error_message: str = None, attempt: int = 1) -> str:
@@ -99,9 +119,10 @@ result = df['Total'].sum()
         response = self.client.chat.completions.create(
             model=Config.OPENAI_MODEL,
             messages=messages,
-            temperature=0  # Deterministic for code
+            max_tokens=Config.OPENAI_MAX_TOKENS,
+            temperature=0
         )
-        
+
         content = response.choices[0].message.content
         
         # Extract code from markdown blocks
@@ -180,7 +201,8 @@ Please answer the question clearly based on this result.
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_content}
             ],
+            max_tokens=Config.OPENAI_MAX_TOKENS,
             temperature=0
         )
-        
+
         return response.choices[0].message.content
