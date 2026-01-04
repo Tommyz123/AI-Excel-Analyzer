@@ -574,6 +574,90 @@ def create_top_products_chart(analyzer):
     )
 
     return fig
+
+
+def create_sales_by_state_chart(analyzer):
+    """
+    创建Sales by State柱状图（优化版）
+
+    升级内容：
+    - Top 3州用橙色高亮（ChartColors.ACCENT），其他用深蓝
+    - 添加平均销售额参考线（灰色虚线）
+    - Y轴格式化：$符号 + 千位分隔符
+    - 柱顶显示金额
+    - Hover显示：州名 + 金额 + 排名
+    """
+    state_sales = analyzer.get_sales_by_state()
+
+    if state_sales.empty:
+        return None
+
+    # 识别Top 3州
+    top3_states = set(state_sales.head(3).index)
+
+    # 为每个州分配颜色（Top 3用橙色，其他用深蓝）
+    colors = [ChartColors.ACCENT if state in top3_states else ChartColors.PRIMARY
+              for state in state_sales.index]
+
+    # 计算平均销售额
+    avg_sales = state_sales.mean()
+
+    # 为hover添加排名信息
+    ranks = list(range(1, len(state_sales) + 1))
+
+    fig = go.Figure(go.Bar(
+        x=state_sales.index,
+        y=state_sales.values,
+        marker=dict(
+            color=colors,
+            line=dict(width=0)
+        ),
+        text=[f'${val:,.0f}' for val in state_sales.values],
+        textposition='outside',
+        textfont=dict(color='#1D1D1F', size=12, family='Inter'),
+        customdata=ranks,
+        hovertemplate='<b>%{x}</b><br>销售额: $%{y:,.2f}<br>排名: #%{customdata}<extra></extra>'
+    ))
+
+    # 添加平均线
+    fig.add_hline(
+        y=avg_sales,
+        line_dash="dash",
+        line_color='rgba(100,100,100,0.5)',
+        line_width=2,
+        annotation_text=f"平均: ${avg_sales:,.0f}",
+        annotation_position="right",
+        annotation_font=dict(size=11, color='#86868B')
+    )
+
+    fig.update_layout(
+        title=dict(
+            text='📍 各州销售额分布',
+            font=dict(size=UIConfig.TITLE_FONT_SIZE, family='Inter', weight=600),
+            x=0.5,
+            xanchor='center'
+        ),
+        xaxis_title='州（State）',
+        yaxis_title='销售额（$）',
+        height=UIConfig.CHART_HEIGHT,
+        showlegend=False,
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        margin=dict(l=20, r=20, t=60, b=40),
+        xaxis=dict(
+            showgrid=False,
+            tickfont=dict(size=11)
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='rgba(0,0,0,0.05)',
+            tickformat='$,.0f',
+            tickprefix='$'
+        ),
+        font=dict(family='Inter', color='#1D1D1F')
+    )
+
+    return fig
 # ===============================================================================
 
 
@@ -655,19 +739,12 @@ def show_dashboard(analyzer: SalesAnalyzer):
             st.info("暂无产品数据")
     
     with col_right:
-        # Sales by State
-        st.subheader(UI_TEXT["state_sales"])
-        state_sales = analyzer.get_sales_by_state()
-        
-        fig2 = px.bar(
-            x=state_sales.index,
-            y=state_sales.values,
-            labels={'x': 'State', 'y': 'Sales ($)'},
-            color=state_sales.values,
-            color_continuous_scale='Greens'
-        )
-        fig2.update_layout(showlegend=False, height=400)
-        st.plotly_chart(fig2, use_container_width=True)
+        # Sales by State (优化版图表)
+        fig2 = create_sales_by_state_chart(analyzer)
+        if fig2:
+            st.plotly_chart(fig2, use_container_width=True)
+        else:
+            st.info("暂无州销售数据")
     
     # Daily Trend (full width)
     st.subheader(UI_TEXT["daily_trend"])
