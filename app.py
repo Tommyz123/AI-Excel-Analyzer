@@ -850,39 +850,64 @@ def show_api_usage():
     st.progress(daily_progress, text=f"Daily: {daily_progress*100:.0f}%")
 
 
+def show_enhanced_metrics(analyzer):
+    """
+    显示优化后的指标卡片
+
+    升级内容：
+    - 使用safe_divide防止除零错误
+    - 使用format_currency和format_number统一格式化
+    - 添加图标（💰📦📊）
+    - 统一卡片样式（圆角、阴影）
+    """
+    stats = analyzer.get_summary_stats()
+
+    # 安全计算平均订单价值
+    avg_order = safe_divide(stats['total_sales'], stats['order_count'], fallback=0)
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown(f"""
+            <div class="saas-card">
+                <div class="metric-label">💰 {UI_TEXT["total_sales"]}</div>
+                <div class="metric-value">{format_currency(stats['total_sales'])}</div>
+                <div style="font-size: 0.85rem; color: #86868B; margin-top: 8px;">
+                    {stats['date_range_days']} 天数据
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+            <div class="saas-card">
+                <div class="metric-label">📦 {UI_TEXT["order_count"]}</div>
+                <div class="metric-value">{format_number(stats['order_count'])}</div>
+                <div style="font-size: 0.85rem; color: #86868B; margin-top: 8px;">
+                    {stats['unique_products']} 种产品
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(f"""
+            <div class="saas-card">
+                <div class="metric-label">📊 {UI_TEXT["avg_order"]}</div>
+                <div class="metric-value">{format_currency(avg_order)}</div>
+                <div style="font-size: 0.85rem; color: #86868B; margin-top: 8px;">
+                    平均每单
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+
 def show_dashboard(analyzer: SalesAnalyzer):
     """Display main dashboard with metrics and charts"""
     
-    # Key metrics (Custom SaaS Cards)
+    # Key metrics (优化版卡片 - 使用safe_divide和格式化函数)
     with st.container():
         st.markdown("### 📈 核心指标")
-        stats = analyzer.get_summary_stats()
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.markdown(f"""
-                <div class="saas-card">
-                    <div class="metric-label">{UI_TEXT["total_sales"]}</div>
-                    <div class="metric-value">${stats['total_sales']:,.2f}</div>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
-                <div class="saas-card">
-                    <div class="metric-label">{UI_TEXT["order_count"]}</div>
-                    <div class="metric-value">{stats['order_count']:,}</div>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown(f"""
-                <div class="saas-card">
-                    <div class="metric-label">{UI_TEXT["avg_order"]}</div>
-                    <div class="metric-value">${stats['avg_order_value']:.2f}</div>
-                </div>
-            """, unsafe_allow_html=True)
+        show_enhanced_metrics(analyzer)
     
     st.markdown("---")
     
