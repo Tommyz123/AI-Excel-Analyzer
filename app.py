@@ -658,6 +658,165 @@ def create_sales_by_state_chart(analyzer):
     )
 
     return fig
+
+
+def create_daily_trend_chart(analyzer):
+    """
+    创建Daily Trend折线图（优化版 - 最复杂）
+
+    升级内容：
+    - 线条加粗到4px（UIConfig.LINE_WIDTH）
+    - 线下区域填充蓝色渐变（15%透明度）
+    - 添加趋势线（scipy线性回归，带降级处理）
+    - 标注最高点和最低点（emoji + 金额）
+    - 圆点标记增大到8px（UIConfig.MARKER_SIZE）
+    - 日期格式：MM/DD，金额格式：$X,XXX
+    """
+    daily_trend = analyzer.get_daily_trend()
+
+    if daily_trend.empty:
+        return None
+
+    # 准备数据
+    dates = daily_trend.index
+    sales = daily_trend.values
+
+    # 创建主折线图
+    fig = go.Figure()
+
+    # 主折线（加粗 + 渐变填充）
+    fig.add_trace(go.Scatter(
+        x=dates,
+        y=sales,
+        mode='lines+markers',
+        name='每日销售额',
+        line=dict(
+            color=ChartColors.PRIMARY,
+            width=UIConfig.LINE_WIDTH
+        ),
+        marker=dict(
+            size=UIConfig.MARKER_SIZE,
+            color=ChartColors.PRIMARY,
+            line=dict(color='white', width=2)
+        ),
+        fill='tozeroy',
+        fillcolor=f'rgba(31, 119, 180, 0.15)',  # 15% transparency
+        hovertemplate='<b>%{x|%m/%d}</b><br>销售额: $%{y:,.2f}<extra></extra>'
+    ))
+
+    # 添加趋势线（scipy线性回归，带降级处理）
+    try:
+        from scipy import stats
+        import numpy as np
+
+        # 转换日期为数值（天数）
+        x_numeric = np.arange(len(dates))
+        y_numeric = np.array(sales)
+
+        # 线性回归
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x_numeric, y_numeric)
+        trend_line = slope * x_numeric + intercept
+
+        # 添加趋势线
+        fig.add_trace(go.Scatter(
+            x=dates,
+            y=trend_line,
+            mode='lines',
+            name=f'趋势线 (R²={r_value**2:.2f})',
+            line=dict(
+                color=ChartColors.ACCENT,
+                width=2,
+                dash='dash'
+            ),
+            hovertemplate='<b>趋势</b><br>$%{y:,.2f}<extra></extra>'
+        ))
+
+    except ImportError:
+        # scipy未安装，显示友好提示
+        st.sidebar.warning("⚠️ 趋势线需要scipy库：`pip install scipy`")
+    except Exception as e:
+        # 其他错误（如数据问题），静默失败
+        print(f"趋势线计算失败: {e}")
+
+    # 标注最高点和最低点
+    if len(sales) > 0:
+        max_idx = sales.argmax()
+        min_idx = sales.argmin()
+
+        # 最高点标注
+        fig.add_annotation(
+            x=dates[max_idx],
+            y=sales[max_idx],
+            text=f"📈 最高<br>${sales[max_idx]:,.0f}",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor=ChartColors.SUCCESS,
+            ax=0,
+            ay=-60,
+            bgcolor='rgba(212, 237, 218, 0.9)',
+            bordercolor=ChartColors.PRIMARY,
+            borderwidth=2,
+            borderpad=6,
+            font=dict(size=11, color='#1D1D1F', family='Inter')
+        )
+
+        # 最低点标注
+        fig.add_annotation(
+            x=dates[min_idx],
+            y=sales[min_idx],
+            text=f"📉 最低<br>${sales[min_idx]:,.0f}",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor=ChartColors.DANGER,
+            ax=0,
+            ay=60,
+            bgcolor='rgba(248, 215, 218, 0.9)',
+            bordercolor=ChartColors.PRIMARY,
+            borderwidth=2,
+            borderpad=6,
+            font=dict(size=11, color='#1D1D1F', family='Inter')
+        )
+
+    fig.update_layout(
+        title=dict(
+            text='📊 每日销售趋势',
+            font=dict(size=UIConfig.TITLE_FONT_SIZE, family='Inter', weight=600),
+            x=0.5,
+            xanchor='center'
+        ),
+        xaxis_title='日期',
+        yaxis_title='销售额（$）',
+        height=UIConfig.CHART_HEIGHT,
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        margin=dict(l=20, r=20, t=60, b=40),
+        xaxis=dict(
+            showgrid=True,
+            gridcolor='rgba(0,0,0,0.05)',
+            tickformat='%m/%d'
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='rgba(0,0,0,0.05)',
+            tickformat='$,.0f',
+            tickprefix='$'
+        ),
+        hovermode='x unified',
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='right',
+            x=1
+        ),
+        font=dict(family='Inter', color='#1D1D1F')
+    )
+
+    return fig
 # ===============================================================================
 
 
@@ -746,19 +905,12 @@ def show_dashboard(analyzer: SalesAnalyzer):
         else:
             st.info("暂无州销售数据")
     
-    # Daily Trend (full width)
-    st.subheader(UI_TEXT["daily_trend"])
-    daily_trend = analyzer.get_daily_trend()
-    
-    fig3 = px.line(
-        x=daily_trend.index,
-        y=daily_trend.values,
-        labels={'x': 'Date', 'y': 'Sales ($)'},
-        markers=True
-    )
-    fig3.update_traces(line_color='#FF6B6B', line_width=3)
-    fig3.update_layout(height=400)
-    st.plotly_chart(fig3, use_container_width=True)
+    # Daily Trend (full width) - 优化版图表
+    fig3 = create_daily_trend_chart(analyzer)
+    if fig3:
+        st.plotly_chart(fig3, use_container_width=True)
+    else:
+        st.info("暂无每日销售数据")
     
     # Business Insights
     st.divider()
