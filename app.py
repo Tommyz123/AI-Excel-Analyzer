@@ -6,13 +6,36 @@ Streamlit web application for automated sales analysis
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
-from config import Config, UI_TEXT_EN as UI_TEXT
+from config import Config, UI_TEXT_EN, UI_TEXT_ZH
 from utils.data_processor import FlexibleDataProcessor
 from utils.analyzer import SalesAnalyzer
 from utils.pandas_agent import PandasAgent  # Changed from AIAgent
 from utils.exporter import DataExporter
 from utils.template_generator import TemplateGenerator
 from utils.cost_controller import CostController
+
+
+# ==================== Translation Function ====================
+def t(key, **kwargs):
+    """
+    Get translated text based on current language
+
+    Args:
+        key: Translation key (e.g., 'hero_slogan_title')
+        **kwargs: Format parameters (e.g., count=100, date='2024-01-15')
+
+    Returns:
+        Formatted text in current language
+    """
+    lang = st.session_state.get('language', 'en')
+    text_dict = UI_TEXT_EN if lang == 'en' else UI_TEXT_ZH
+    text = text_dict.get(key, key)
+    if kwargs:
+        try:
+            return text.format(**kwargs)
+        except:
+            return text
+    return text
 
 
 # ==================== 配置常量（未来可提取为config_extended.py）====================
@@ -249,6 +272,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Initialize session state
+# Language setting (default to English)
+if 'language' not in st.session_state:
+    st.session_state.language = 'en'
+
 if 'df' not in st.session_state:
     st.session_state.df = None
 if 'analyzer' not in st.session_state:
@@ -285,10 +312,10 @@ def show_hero_page():
         <div style='text-align: center; padding: 3rem 1rem 2rem 1rem;'>
             <h1 style='font-size: 2.8rem; font-weight: 700; color: {ChartColors.PRIMARY};
                        margin-bottom: 1rem; letter-spacing: -0.02em;'>
-                30秒看懂你的数据
+                {t('hero_slogan_title')}
             </h1>
             <p style='font-size: 1.3rem; color: #86868B; font-weight: 400;'>
-                AI驱动的Excel分析 - 让数据洞察变得简单
+                {t('hero_slogan_subtitle')}
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -296,9 +323,9 @@ def show_hero_page():
     st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
 
     # 3-Step Process Cards
-    st.markdown("""
+    st.markdown(f"""
         <div style='text-align: center; margin-bottom: 1rem;'>
-            <h3 style='color: #1D1D1F; font-weight: 600;'>三步开始分析</h3>
+            <h3 style='color: #1D1D1F; font-weight: 600;'>{t('hero_steps_title')}</h3>
         </div>
     """, unsafe_allow_html=True)
 
@@ -309,12 +336,10 @@ def show_hero_page():
             <div class='saas-card' style='text-align: center; min-height: 240px;'>
                 <div style='font-size: 3rem; margin-bottom: 1rem;'>📤</div>
                 <h4 style='color: {ChartColors.PRIMARY}; font-weight: 600; margin-bottom: 0.8rem;'>
-                    1. 上传Excel
+                    {t('hero_step1_title')}
                 </h4>
                 <p style='color: #86868B; font-size: 0.95rem; line-height: 1.6;'>
-                    支持 .xlsx, .xls, .csv 格式<br/>
-                    自动识别表头和数据类型<br/>
-                    灵活处理各种格式
+                    {t('hero_step1_desc').replace(chr(10), '<br/>')}
                 </p>
             </div>
         """, unsafe_allow_html=True)
@@ -324,12 +349,10 @@ def show_hero_page():
             <div class='saas-card' style='text-align: center; min-height: 240px;'>
                 <div style='font-size: 3rem; margin-bottom: 1rem;'>🤖</div>
                 <h4 style='color: {ChartColors.ACCENT}; font-weight: 600; margin-bottom: 0.8rem;'>
-                    2. AI分析
+                    {t('hero_step2_title')}
                 </h4>
                 <p style='color: #86868B; font-size: 0.95rem; line-height: 1.6;'>
-                    自动生成可视化图表<br/>
-                    智能发现业务洞察<br/>
-                    提供优化建议
+                    {t('hero_step2_desc').replace(chr(10), '<br/>')}
                 </p>
             </div>
         """, unsafe_allow_html=True)
@@ -339,12 +362,10 @@ def show_hero_page():
             <div class='saas-card' style='text-align: center; min-height: 240px;'>
                 <div style='font-size: 3rem; margin-bottom: 1rem;'>📊</div>
                 <h4 style='color: #34C759; font-weight: 600; margin-bottom: 0.8rem;'>
-                    3. 导出报告
+                    {t('hero_step3_title')}
                 </h4>
                 <p style='color: #86868B; font-size: 0.95rem; line-height: 1.6;'>
-                    一键导出PDF报告<br/>
-                    保存分析结果<br/>
-                    随时分享团队
+                    {t('hero_step3_desc').replace(chr(10), '<br/>')}
                 </p>
             </div>
         """, unsafe_allow_html=True)
@@ -352,10 +373,10 @@ def show_hero_page():
     st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
 
     # Call to Action
-    st.markdown("""
+    st.markdown(f"""
         <div style='text-align: center;'>
             <p style='color: #86868B; font-size: 1rem; margin-bottom: 1.5rem;'>
-                👈 从左侧边栏上传文件开始，或加载Demo数据体验
+                {t('hero_get_started')}
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -366,10 +387,10 @@ def show_hero_page():
     col_a, col_b, col_c, col_d = st.columns(4)
 
     features = [
-        ("⚡", "快速分析", "秒级处理数据"),
-        ("🎯", "精准洞察", "AI驱动智能"),
-        ("📈", "专业图表", "可视化呈现"),
-        ("🔒", "数据安全", "本地处理")
+        (t('hero_feature1_icon'), t('hero_feature1_title'), t('hero_feature1_desc')),
+        (t('hero_feature2_icon'), t('hero_feature2_title'), t('hero_feature2_desc')),
+        (t('hero_feature3_icon'), t('hero_feature3_title'), t('hero_feature3_desc')),
+        (t('hero_feature4_icon'), t('hero_feature4_title'), t('hero_feature4_desc'))
     ]
 
     for col, (icon, title, desc) in zip([col_a, col_b, col_c, col_d], features):
@@ -385,64 +406,126 @@ def show_hero_page():
 
 def show_header():
     """Display application header"""
-    st.title(f"{Config.APP_ICON} {UI_TEXT['app_title']}")
-    st.markdown(f"*{UI_TEXT['app_subtitle']}*")
+    st.title(f"{Config.APP_ICON} {t('app_title')}")
+    st.markdown(f"*{t('app_subtitle')}*")
     st.divider()
 
 
 def show_sidebar():
     """Display sidebar with file upload and templates"""
     with st.sidebar:
-        st.header(UI_TEXT["upload_section"])
-        
-        # File uploader
-        uploaded_file = st.file_uploader(
-            UI_TEXT["upload_label"],
-            type=['xlsx', 'csv'],
-            help=UI_TEXT["upload_help"]
+        # ==================== Language Switcher (Top) ====================
+        st.markdown(f"### 🌐 {t('language')}")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button(
+                "🇬🇧 English",
+                use_container_width=True,
+                type="primary" if st.session_state.language == 'en' else "secondary"
+            ):
+                st.session_state.language = 'en'
+                st.rerun()
+
+        with col2:
+            if st.button(
+                "🇨🇳 中文",
+                use_container_width=True,
+                type="primary" if st.session_state.language == 'zh' else "secondary"
+            ):
+                st.session_state.language = 'zh'
+                st.rerun()
+
+        st.divider()
+
+        # ==================== File Upload Section ====================
+        st.header(t("upload_section"))
+
+        # 选择上传模式（单文件 or 多文件对比）
+        upload_mode = st.radio(
+            t('upload_mode_label'),
+            [t('upload_mode_single'), t('upload_mode_multi')],
+            key="upload_mode",
+            help=t('upload_mode_multi_help')
         )
-        
+
+        # File uploader
+        if upload_mode == t('upload_mode_single'):
+            uploaded_file = st.file_uploader(
+                t("upload_label"),
+                type=['xlsx', 'csv'],
+                help=t("upload_help")
+            )
+            uploaded_files = [uploaded_file] if uploaded_file else []
+        else:
+            uploaded_files = st.file_uploader(
+                t('upload_mode_multi_help'),
+                type=['xlsx', 'csv'],
+                accept_multiple_files=True,
+                help=t('upload_mode_multi_help')
+            )
+            if uploaded_files and not (2 <= len(uploaded_files) <= 3):
+                st.warning(t('upload_mode_warning', count=len(uploaded_files)))
+                uploaded_files = []
+
+        # 文件标签（多文件模式）
+        file_labels = []
+        if upload_mode == t('upload_mode_multi') and uploaded_files and 2 <= len(uploaded_files) <= 3:
+            st.markdown(t('file_labels_title'))
+            st.caption(t('file_labels_caption'))
+
+            for i, file in enumerate(uploaded_files):
+                default_label = file.name.replace('.xlsx', '').replace('.csv', '')[:20]
+                label = st.text_input(
+                    t('file_label_input', num=i+1),
+                    value=default_label,
+                    key=f"file_label_{i}",
+                    max_chars=20
+                )
+                file_labels.append(label)
+
         # API Key input
         st.divider()
         api_key = st.text_input(
-            UI_TEXT["api_key_label"],
+            t("api_key_label"),
             type="password",
-            help=UI_TEXT["api_key_help"]
+            help=t("api_key_help")
         )
-        
+
         # Use config key if not provided
         if not api_key:
             api_key = Config.OPENAI_API_KEY
-        
+
         # Templates section
         st.divider()
-        st.subheader(UI_TEXT["template_section"])
-        
+        st.subheader(t("template_section"))
+
         col1, col2 = st.columns(2)
-        
+
         with col1:
             blank_template = TemplateGenerator.generate_blank_template()
             st.download_button(
-                label=UI_TEXT["template_blank"],
+                label=t("template_blank"),
                 data=blank_template,
                 file_name="sales_template.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                help=UI_TEXT["template_blank_help"]
+                help=t("template_blank_help")
             )
-        
+
         with col2:
             sample_data = TemplateGenerator.generate_sample_data()
             st.download_button(
-                label=UI_TEXT["template_sample"],
+                label=t("template_sample"),
                 data=sample_data,
                 file_name="sales_sample.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                help=UI_TEXT["template_sample_help"]
+                help=t("template_sample_help")
             )
-        
+
         # Format guide
-        with st.expander(UI_TEXT["format_guide_title"]):
-            st.markdown(UI_TEXT["format_guide_content"])
+        with st.expander(t("format_guide_title")):
+            st.markdown(t("format_guide_content"))
 
         # Demo Data Loader (New Feature)
         st.divider()
@@ -474,14 +557,15 @@ def show_sidebar():
 
         # Privacy notice
         st.divider()
-        with st.expander(UI_TEXT["privacy_title"]):
-            st.markdown(UI_TEXT["privacy_content"])
+        with st.expander(t("privacy_title")):
+            st.markdown(t("privacy_content"))
         
         # API usage stats (if AI agent exists)
         if st.session_state.ai_agent:
             show_api_usage()
-        
-        return uploaded_file, api_key
+
+        # 返回上传的文件列表和标签
+        return uploaded_files, file_labels, api_key, upload_mode
 
 
 # ==================== 工具函数（未来可提取为utils/formatting.py）====================
@@ -572,17 +656,17 @@ def create_top_products_chart(analyzer):
         text=[f'{int(val):,}' for val in top_products.values],
         textposition='inside',
         textfont=dict(color='white', size=14, family='Inter'),
-        hovertemplate='<b>%{y}</b><br>销量: %{x:,} 件<extra></extra>'
+        hovertemplate=t('chart_top_products_hover')
     ))
 
     fig.update_layout(
         title=dict(
-            text='🏆 畅销产品 Top 5',
+            text=t('chart_top_products_title'),
             font=dict(size=UIConfig.TITLE_FONT_SIZE, family='Inter', weight=600),
             x=0.5,
             xanchor='center'
         ),
-        xaxis_title='销量（件）',
+        xaxis_title=t('chart_top_products_ylabel'),
         yaxis_title='',
         height=UIConfig.CHART_HEIGHT,
         showlegend=False,
@@ -644,7 +728,7 @@ def create_sales_by_state_chart(analyzer):
         textposition='outside',
         textfont=dict(color='#1D1D1F', size=12, family='Inter'),
         customdata=ranks,
-        hovertemplate='<b>%{x}</b><br>销售额: $%{y:,.2f}<br>排名: #%{customdata}<extra></extra>'
+        hovertemplate=t('chart_sales_by_state_hover')
     ))
 
     # 添加平均线
@@ -653,20 +737,20 @@ def create_sales_by_state_chart(analyzer):
         line_dash="dash",
         line_color='rgba(100,100,100,0.5)',
         line_width=2,
-        annotation_text=f"平均: ${avg_sales:,.0f}",
+        annotation_text=t('chart_sales_by_state_avg_line', avg=avg_sales),
         annotation_position="right",
         annotation_font=dict(size=11, color='#86868B')
     )
 
     fig.update_layout(
         title=dict(
-            text='📍 各州销售额分布',
+            text=t('chart_sales_by_state_title'),
             font=dict(size=UIConfig.TITLE_FONT_SIZE, family='Inter', weight=600),
             x=0.5,
             xanchor='center'
         ),
-        xaxis_title='州（State）',
-        yaxis_title='销售额（$）',
+        xaxis_title=t('chart_sales_by_state_xlabel'),
+        yaxis_title=t('chart_sales_by_state_ylabel'),
         height=UIConfig.CHART_HEIGHT,
         showlegend=False,
         plot_bgcolor='white',
@@ -717,7 +801,7 @@ def create_daily_trend_chart(analyzer):
         x=dates,
         y=sales,
         mode='lines+markers',
-        name='每日销售额',
+        name=t('chart_daily_trend_trace_name'),
         line=dict(
             color=ChartColors.PRIMARY,
             width=UIConfig.LINE_WIDTH
@@ -729,7 +813,7 @@ def create_daily_trend_chart(analyzer):
         ),
         fill='tozeroy',
         fillcolor=f'rgba(31, 119, 180, 0.15)',  # 15% transparency
-        hovertemplate='<b>%{x|%m/%d}</b><br>销售额: $%{y:,.2f}<extra></extra>'
+        hovertemplate=t('chart_daily_trend_hover')
     ))
 
     # 添加趋势线（scipy线性回归，带降级处理）
@@ -750,18 +834,18 @@ def create_daily_trend_chart(analyzer):
             x=dates,
             y=trend_line,
             mode='lines',
-            name=f'趋势线 (R²={r_value**2:.2f})',
+            name=t('chart_daily_trend_trend_legend', r2=r_value**2),
             line=dict(
                 color=ChartColors.ACCENT,
                 width=2,
                 dash='dash'
             ),
-            hovertemplate='<b>趋势</b><br>$%{y:,.2f}<extra></extra>'
+            hovertemplate=t('chart_daily_trend_trend_hover')
         ))
 
     except ImportError:
         # scipy未安装，显示友好提示
-        st.sidebar.warning("⚠️ 趋势线需要scipy库：`pip install scipy`")
+        st.sidebar.warning(t('chart_daily_trend_warning'))
     except Exception as e:
         # 其他错误（如数据问题），静默失败
         print(f"趋势线计算失败: {e}")
@@ -775,7 +859,7 @@ def create_daily_trend_chart(analyzer):
         fig.add_annotation(
             x=dates[max_idx],
             y=sales[max_idx],
-            text=f"📈 最高<br>${sales[max_idx]:,.0f}",
+            text=t('chart_daily_trend_max_label', amount=sales[max_idx]),
             showarrow=True,
             arrowhead=2,
             arrowsize=1,
@@ -794,7 +878,7 @@ def create_daily_trend_chart(analyzer):
         fig.add_annotation(
             x=dates[min_idx],
             y=sales[min_idx],
-            text=f"📉 最低<br>${sales[min_idx]:,.0f}",
+            text=t('chart_daily_trend_min_label', amount=sales[min_idx]),
             showarrow=True,
             arrowhead=2,
             arrowsize=1,
@@ -811,13 +895,13 @@ def create_daily_trend_chart(analyzer):
 
     fig.update_layout(
         title=dict(
-            text='📊 每日销售趋势',
+            text=t('chart_daily_trend_title'),
             font=dict(size=UIConfig.TITLE_FONT_SIZE, family='Inter', weight=600),
             x=0.5,
             xanchor='center'
         ),
-        xaxis_title='日期',
-        yaxis_title='销售额（$）',
+        xaxis_title=t('chart_daily_trend_xlabel'),
+        yaxis_title=t('chart_daily_trend_ylabel'),
         height=UIConfig.CHART_HEIGHT,
         plot_bgcolor='white',
         paper_bgcolor='white',
@@ -898,10 +982,10 @@ def show_enhanced_metrics(analyzer):
     with col1:
         st.markdown(f"""
             <div class="saas-card">
-                <div class="metric-label">💰 {UI_TEXT["total_sales"]}</div>
+                <div class="metric-label">{t("metrics_total_sales_label")}</div>
                 <div class="metric-value">{format_currency(stats['total_sales'])}</div>
                 <div style="font-size: 0.85rem; color: #86868B; margin-top: 8px;">
-                    {stats['date_range_days']} 天数据
+                    {t('metrics_total_sales_subtitle', days=stats['date_range_days'])}
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -909,10 +993,10 @@ def show_enhanced_metrics(analyzer):
     with col2:
         st.markdown(f"""
             <div class="saas-card">
-                <div class="metric-label">📦 {UI_TEXT["order_count"]}</div>
+                <div class="metric-label">{t("metrics_order_count_label")}</div>
                 <div class="metric-value">{format_number(stats['order_count'])}</div>
                 <div style="font-size: 0.85rem; color: #86868B; margin-top: 8px;">
-                    {stats['unique_products']} 种产品
+                    {t('metrics_order_count_subtitle', products=stats['unique_products'])}
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -920,10 +1004,10 @@ def show_enhanced_metrics(analyzer):
     with col3:
         st.markdown(f"""
             <div class="saas-card">
-                <div class="metric-label">📊 {UI_TEXT["avg_order"]}</div>
+                <div class="metric-label">{t("metrics_avg_order_label")}</div>
                 <div class="metric-value">{format_currency(avg_order)}</div>
                 <div style="font-size: 0.85rem; color: #86868B; margin-top: 8px;">
-                    平均每单
+                    {t('metrics_avg_order_subtitle')}
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -1054,7 +1138,7 @@ def show_categorized_insights(analyzer):
     with col1:
         st.markdown(f"""
             <div style="background: {ChartColors.SUCCESS}; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
-                <h4 style="margin: 0; color: #1D1D1F;">🔥 机会 ({len(opportunities)})</h4>
+                <h4 style="margin: 0; color: #1D1D1F;">{t('insights_category_opportunity', count=len(opportunities))}</h4>
             </div>
         """, unsafe_allow_html=True)
 
@@ -1071,7 +1155,7 @@ def show_categorized_insights(analyzer):
     with col2:
         st.markdown(f"""
             <div style="background: {ChartColors.WARNING}; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
-                <h4 style="margin: 0; color: #1D1D1F;">⚠️ 风险 ({len(risks)})</h4>
+                <h4 style="margin: 0; color: #1D1D1F;">{t('insights_category_risk', count=len(risks))}</h4>
             </div>
         """, unsafe_allow_html=True)
 
@@ -1088,7 +1172,7 @@ def show_categorized_insights(analyzer):
     with col3:
         st.markdown(f"""
             <div style="background: {ChartColors.INFO}; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
-                <h4 style="margin: 0; color: #1D1D1F;">📊 趋势 ({len(trends)})</h4>
+                <h4 style="margin: 0; color: #1D1D1F;">{t('insights_category_trend', count=len(trends))}</h4>
             </div>
         """, unsafe_allow_html=True)
 
@@ -1150,25 +1234,25 @@ def show_dashboard(analyzer: SalesAnalyzer):
 def show_export_section(analyzer: SalesAnalyzer):
     """Display export options"""
     st.divider()
-    st.subheader(UI_TEXT["export_section"])
-    
+    st.subheader(t("export_section"))
+
     exporter = DataExporter(analyzer)
-    
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
         excel_data = exporter.export_to_excel()
         st.download_button(
-            label=UI_TEXT["export_excel"],
+            label=t("export_excel"),
             data=excel_data,
             file_name=exporter.get_filename('xlsx'),
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-    
+
     with col2:
         csv_data = exporter.export_to_csv()
         st.download_button(
-            label=UI_TEXT["export_csv"],
+            label=t("export_csv"),
             data=csv_data,
             file_name=exporter.get_filename('csv'),
             mime="text/csv"
@@ -1178,8 +1262,8 @@ def show_export_section(analyzer: SalesAnalyzer):
 def show_ai_assistant(analyzer: SalesAnalyzer, api_key: str):
     """Display AI Q&A interface with chat history and download"""
     st.divider()
-    st.subheader(UI_TEXT["ai_qa_title"])
-    st.markdown(f"*{UI_TEXT['ai_qa_subtitle']}*")
+    st.subheader(t("ai_qa_title"))
+    st.markdown(f"*{t('ai_qa_subtitle')}*")
     
     # Initialize AI agent if not exists
     if st.session_state.ai_agent is None:
@@ -1199,7 +1283,7 @@ def show_ai_assistant(analyzer: SalesAnalyzer, api_key: str):
     
     # Check if API key is valid
     if not api_key or not api_key.strip() or api_key == "your-api-key-here":
-        st.warning(UI_TEXT["error_api_key"])
+        st.warning(t("error_api_key"))
         return
 
     # Chat Interface Container
@@ -1208,20 +1292,20 @@ def show_ai_assistant(analyzer: SalesAnalyzer, api_key: str):
         for message in st.session_state.chat_history:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
-        
+
         # Welcome message if history is empty
         if not st.session_state.chat_history:
             with st.chat_message("assistant"):
-                st.write(f"👋 {UI_TEXT['ai_qa_subtitle']}")
+                st.write(f"👋 {t('ai_qa_subtitle')}")
                 st.markdown("**您可以试着问我：**")
-                for example in UI_TEXT["ai_qa_examples"][:3]:
+                for example in t("ai_qa_examples")[:3]:
                     st.markdown(f"- {example}")
 
         # Question input
-        if question := st.chat_input(UI_TEXT["ai_qa_placeholder"]):
+        if question := st.chat_input(t("ai_qa_placeholder")):
             # Add user message to history
             st.session_state.chat_history.append({"role": "user", "content": question})
-            
+
             # Display user message immediately
             with st.chat_message("user"):
                 st.write(question)
@@ -1229,14 +1313,14 @@ def show_ai_assistant(analyzer: SalesAnalyzer, api_key: str):
             # Check API limits
             controller = CostController()
             can_call, message = controller.can_make_call()
-            
+
             if not can_call:
-                st.error(UI_TEXT["error_api_limit"].format(message=message))
+                st.error(t("error_api_limit", message=message))
                 return
-            
+
             # Get answer
             with st.chat_message("assistant"):
-                with st.spinner(UI_TEXT["ai_thinking"]):
+                with st.spinner(t("ai_thinking")):
                     answer = st.session_state.ai_agent.ask(question)
                     
                     # Record API call
@@ -1263,52 +1347,314 @@ def show_ai_assistant(analyzer: SalesAnalyzer, api_key: str):
         )
 
 
+def show_comparison_dashboard(comparison_analyzer):
+    """
+    显示多文件对比仪表板
+
+    Args:
+        comparison_analyzer: ComparisonAnalyzer实例
+    """
+    from utils.comparison_analyzer import ComparisonAnalyzer
+
+    st.title(t('multifile_title'))
+
+    # ========== 汇总指标卡片 ==========
+    st.subheader(t('multifile_summary_metrics_title'))
+
+    metrics = comparison_analyzer.get_summary_metrics()
+
+    # 创建对比卡片
+    cols = st.columns(len(metrics['labels']))
+
+    for i, label in enumerate(metrics['labels']):
+        with cols[i]:
+            st.markdown(f"""
+                <div class="saas-card" style="text-align: center; padding: 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h3 style="color: white; margin-bottom: 15px;">{label}</h3>
+                    <div style="font-size: 2.2rem; font-weight: 700; margin: 10px 0;">
+                        ${metrics['total_sales'][i]:,.0f}
+                    </div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">
+                        {t('multifile_summary_total_sales')}
+                    </div>
+                    <hr style="border-color: rgba(255,255,255,0.3); margin: 15px 0;">
+                    <div style="font-size: 1.5rem; font-weight: 600;">
+                        {metrics['total_orders'][i]:,}
+                    </div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">
+                        {t('multifile_summary_order_count')}
+                    </div>
+                    <hr style="border-color: rgba(255,255,255,0.3); margin: 15px 0;">
+                    <div style="font-size: 1.5rem; font-weight: 600;">
+                        ${metrics['avg_order_value'][i]:,.2f}
+                    </div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">
+                        {t('multifile_summary_avg_order')}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+    # ========== 增长分析 ==========
+    growth_analysis = comparison_analyzer.get_growth_analysis()
+
+    if growth_analysis:
+        st.markdown("---")
+        st.subheader(t('multifile_growth_title'))
+        st.caption(t('multifile_growth_subtitle', baseline=growth_analysis['baseline']))
+
+        growth_cols = st.columns(len(growth_analysis['comparisons']))
+
+        for i, comp in enumerate(growth_analysis['comparisons']):
+            with growth_cols[i]:
+                # 销售额增长
+                sales_growth = comp['sales_growth']
+                arrow = "↑" if sales_growth > 0 else "↓"
+                color = "#28a745" if sales_growth > 0 else "#dc3545"
+
+                st.markdown(f"""
+                    <div class="saas-card" style="text-align: center; padding: 20px;">
+                        <h4>{comp['label']}</h4>
+                        <div style="font-size: 2rem; font-weight: 700; color: {color}; margin: 15px 0;">
+                            {arrow} {abs(sales_growth):.1f}%
+                        </div>
+                        <div style="font-size: 0.9rem; color: #666;">
+                            {t('multifile_growth_change_label')}
+                        </div>
+                        <hr style="margin: 15px 0;">
+                        <div style="font-size: 1.2rem; color: {color};">
+                            {t('multifile_growth_order_qty')} {arrow} {abs(comp['orders_growth']):.1f}%
+                        </div>
+                        <div style="font-size: 1.2rem; color: {color};">
+                            {t('multifile_growth_avg_order')} {arrow} {abs(comp['avg_order_growth']):.1f}%
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+    # ========== 对比图表 ==========
+    st.markdown("---")
+    st.subheader(t('multifile_charts_title'))
+
+    # 1. 销售额对比柱状图
+    fig_sales = go.Figure()
+
+    for i, label in enumerate(metrics['labels']):
+        fig_sales.add_trace(go.Bar(
+            name=label,
+            x=[t('multifile_summary_total_sales'), t('multifile_summary_order_count'), t('multifile_summary_avg_order')],
+            y=[metrics['total_sales'][i], metrics['total_orders'][i], metrics['avg_order_value'][i]],
+            text=[f"${metrics['total_sales'][i]:,.0f}", f"{metrics['total_orders'][i]:,}", f"${metrics['avg_order_value'][i]:,.2f}"],
+            textposition='auto'
+        ))
+
+    fig_sales.update_layout(
+        title=t('multifile_chart_summary_title'),
+        barmode='group',
+        height=450,
+        xaxis_title=t('multifile_chart_axis_metrics'),
+        yaxis_title=t('multifile_chart_axis_value')
+    )
+
+    st.plotly_chart(fig_sales, use_container_width=True)
+
+    # 2. Top产品对比
+    st.markdown(t('multifile_chart_products_title'))
+
+    top_products_comparison = comparison_analyzer.get_top_products_comparison(5)
+
+    fig_products = go.Figure()
+
+    for label, products in top_products_comparison.items():
+        fig_products.add_trace(go.Bar(
+            name=label,
+            x=products.index,
+            y=products.values,
+            text=products.values,
+            textposition='auto'
+        ))
+
+    fig_products.update_layout(
+        title=t('multifile_top_products_subtitle'),
+        barmode='group',
+        height=450,
+        xaxis_title=t('multifile_chart_axis_product'),
+        yaxis_title=t('multifile_chart_axis_quantity')
+    )
+
+    st.plotly_chart(fig_products, use_container_width=True)
+
+    # 3. 每日趋势对比
+    st.markdown(t('multifile_chart_trends_title'))
+
+    daily_trends = comparison_analyzer.get_daily_trend_comparison()
+
+    fig_trends = go.Figure()
+
+    for label, trend in daily_trends.items():
+        fig_trends.add_trace(go.Scatter(
+            name=label,
+            x=trend.index,
+            y=trend.values,
+            mode='lines+markers',
+            marker=dict(size=6),
+            line=dict(width=3)
+        ))
+
+    fig_trends.update_layout(
+        title=t('multifile_daily_trend_title'),
+        height=450,
+        xaxis_title=t('multifile_chart_axis_date'),
+        yaxis_title=t('multifile_chart_axis_sales'),
+        hovermode='x unified'
+    )
+
+    st.plotly_chart(fig_trends, use_container_width=True)
+
+    # ========== 日期范围信息 ==========
+    st.markdown("---")
+    st.subheader(t('multifile_date_range_title'))
+
+    date_ranges = comparison_analyzer.get_date_ranges()
+
+    date_cols = st.columns(len(date_ranges))
+
+    for i, dr in enumerate(date_ranges):
+        with date_cols[i]:
+            if dr['start_date']:
+                st.info(f"""
+**{dr['label']}**
+- {t('multifile_date_range_start')} {dr['start_date'].date()}
+- {t('multifile_date_range_end')} {dr['end_date'].date()}
+- {t('multifile_date_range_days')} {dr['days']}
+                """)
+            else:
+                st.warning(f"{dr['label']}: {t('multifile_date_range_no_data')}")
+
+
 def main():
     """Main application logic"""
     # show_header() # Disabled for custom navbar
-    
+
     # Sidebar
-    uploaded_file, api_key = show_sidebar()
+    uploaded_files, file_labels, api_key, upload_mode = show_sidebar()
     
     # Main content
-    if uploaded_file is not None:
-        # Process file
-        try:
-            with st.spinner(UI_TEXT["processing"]):
-                processor = FlexibleDataProcessor()
-                df, warnings = processor.process_file(uploaded_file)
-                
-                # Store in session state
-                st.session_state.df = df
-                st.session_state.analyzer = SalesAnalyzer(df)
-                st.session_state.ai_agent = None  # Reset AI agent for new data
-            
-            # Success message
-            st.success(UI_TEXT["success_upload"].format(count=len(df)))
-            
-            # Show warnings if any
-            if warnings:
-                with st.expander(UI_TEXT["warning_data_quality"], expanded=True):
-                    for warning in warnings:
-                        st.warning(warning)
-            
-            # Display dashboard
-            show_dashboard(st.session_state.analyzer)
-            
-            # Export section
-            show_export_section(st.session_state.analyzer)
-            
-            # AI Assistant
-            show_ai_assistant(st.session_state.analyzer, api_key)
-            
-            # Raw data (collapsible)
-            with st.expander("📄 View Raw Data"):
-                st.dataframe(df, use_container_width=True)
-        
-        except Exception as e:
-            st.error(UI_TEXT["error_general"].format(error=str(e)))
-            st.info("Please check your file format and try again. Download our template for reference.")
-    
+    if uploaded_files and len(uploaded_files) > 0:
+        # ========== 多文件对比模式 ==========
+        if upload_mode == t('upload_mode_multi') and 2 <= len(uploaded_files) <= 3:
+            try:
+                with st.spinner(t('multifile_processing')):
+                    from utils.comparison_analyzer import ComparisonAnalyzer
+
+                    processor = FlexibleDataProcessor()
+                    dataframes = []
+                    all_warnings = []
+
+                    # 处理每个文件
+                    for i, file in enumerate(uploaded_files):
+                        df, warnings = processor.process_file(file)
+                        dataframes.append(df)
+
+                        if warnings:
+                            all_warnings.extend([f"[{file_labels[i] if file_labels else file.name}] {w}" for w in warnings])
+
+                    # 创建对比分析器
+                    comparison_analyzer = ComparisonAnalyzer(
+                        dataframes=dataframes,
+                        labels=file_labels if file_labels else [f.name for f in uploaded_files]
+                    )
+
+                    st.session_state.comparison_analyzer = comparison_analyzer
+
+                # 成功消息
+                total_records = sum([len(df) for df in dataframes])
+                st.success(t('multifile_success', count=len(uploaded_files), records=total_records))
+
+                # 显示警告
+                if all_warnings:
+                    with st.expander(t('multifile_warning_title'), expanded=False):
+                        for warning in all_warnings:
+                            st.warning(warning)
+
+                # 显示对比仪表板
+                show_comparison_dashboard(comparison_analyzer)
+
+                # ========== AI助手区域（多文件对比模式）==========
+                st.markdown("---")
+                st.subheader(t('multifile_ai_title'))
+
+                # 数据集选择器（2列布局）
+                col1, col2 = st.columns([2, 1])
+
+                with col1:
+                    selected_dataset_idx = st.selectbox(
+                        t('multifile_ai_selector_label'),
+                        options=range(len(comparison_analyzer.labels)),
+                        format_func=lambda i: f"📊 {comparison_analyzer.labels[i]} ({len(comparison_analyzer.dataframes[i])} {t('multifile_ai_dataset_unit')})",
+                        key="ai_dataset_selector",
+                        help=t('multifile_ai_selector_help')
+                    )
+
+                with col2:
+                    st.metric(
+                        label=t('multifile_ai_dataset_size'),
+                        value=f"{len(comparison_analyzer.dataframes[selected_dataset_idx])} {t('multifile_ai_dataset_unit')}",
+                        delta=None
+                    )
+
+                # 设置当前分析对象（供AI助手使用）
+                st.session_state.df = comparison_analyzer.dataframes[selected_dataset_idx]
+                st.session_state.analyzer = comparison_analyzer.analyzers[selected_dataset_idx]
+
+                # 提示信息
+                st.info(t('multifile_ai_current_info', label=comparison_analyzer.labels[selected_dataset_idx]))
+
+                # 调用现有AI助手（无需修改）
+                show_ai_assistant(st.session_state.analyzer, api_key)
+
+            except Exception as e:
+                st.error(t('multifile_error_failed', error=str(e)))
+                st.info(t('multifile_error_format'))
+
+        # ========== 单文件分析模式 ==========
+        elif len(uploaded_files) == 1:
+            uploaded_file = uploaded_files[0]
+
+            try:
+                with st.spinner(t("processing")):
+                    processor = FlexibleDataProcessor()
+                    df, warnings = processor.process_file(uploaded_file)
+
+                    # Store in session state
+                    st.session_state.df = df
+                    st.session_state.analyzer = SalesAnalyzer(df)
+                    st.session_state.ai_agent = None  # Reset AI agent for new data
+
+                # Success message
+                st.success(t("success_upload", count=len(df)))
+
+                # Show warnings if any
+                if warnings:
+                    with st.expander(t("warning_data_quality"), expanded=True):
+                        for warning in warnings:
+                            st.warning(warning)
+
+                # Display dashboard
+                show_dashboard(st.session_state.analyzer)
+
+                # Export section
+                show_export_section(st.session_state.analyzer)
+
+                # AI Assistant
+                show_ai_assistant(st.session_state.analyzer, api_key)
+
+                # Raw data (collapsible)
+                with st.expander("📄 View Raw Data"):
+                    st.dataframe(df, use_container_width=True)
+
+            except Exception as e:
+                st.error(t("error_general", error=str(e)))
+                st.info("Please check your file format and try again. Download our template for reference.")
+
     else:
         # Hero/Welcome screen with redesigned UI
         show_hero_page()

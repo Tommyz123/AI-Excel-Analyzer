@@ -6,6 +6,21 @@ Performs sales data analysis and generates business insights
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Any
+import streamlit as st
+
+
+def t(key, **kwargs):
+    """获取翻译文本"""
+    from config import UI_TEXT_EN, UI_TEXT_ZH
+    lang = st.session_state.get('language', 'en')
+    text_dict = UI_TEXT_EN if lang == 'en' else UI_TEXT_ZH
+    text = text_dict.get(key, key)
+    if kwargs:
+        try:
+            return text.format(**kwargs)
+        except:
+            return text
+    return text
 
 
 # ==================== 工具函数（保持独立性，便于提取或测试）====================
@@ -136,8 +151,8 @@ class SalesAnalyzer:
                     insights.append({
                         'category': 'opportunity',
                         'emoji': '🔥',
-                        'title': f'销售高峰日: {best_day}',
-                        'detail': f'该日销售额 ${best_amount:,.2f}，比日均高 {pct_above:.1f}%。分析该日的营销活动或外部因素，可复制成功经验。',
+                        'title': t('insight_high_peak_title', date=best_day),
+                        'detail': t('insight_high_peak_detail', amount=best_amount, pct=pct_above),
                         'color': '#d4edda'
                     })
 
@@ -147,8 +162,8 @@ class SalesAnalyzer:
             insights.append({
                 'category': 'opportunity',
                 'emoji': '💎',
-                'title': f'客单价较高: ${avg_order:,.2f}',
-                'detail': f'平均订单价值超过 $50，说明客户购买力强。建议推出高价值产品组合或会员计划，进一步提升客单价。',
+                'title': t('insight_high_customer_value_title', avg=avg_order),
+                'detail': t('insight_high_customer_value_detail'),
                 'color': '#d4edda'
             })
 
@@ -163,8 +178,8 @@ class SalesAnalyzer:
                 insights.append({
                     'category': 'opportunity',
                     'emoji': '📈',
-                    'title': f'销售呈增长趋势: +{growth:.1f}%',
-                    'detail': f'近期销售额相比前期增长 {growth:.1f}%，业务呈现良好增长态势。保持当前策略并考虑加大投入。',
+                    'title': t('insight_growth_trend_title', growth=growth),
+                    'detail': t('insight_growth_trend_detail', growth=growth),
                     'color': '#d4edda'
                 })
 
@@ -183,8 +198,8 @@ class SalesAnalyzer:
                 insights.append({
                     'category': 'risk',
                     'emoji': '⚠️',
-                    'title': f'销售低谷日: {worst_day}',
-                    'detail': f'该日销售额 ${worst_amount:,.2f}，比日均低 {pct_below:.1f}%。需要识别低销售日的原因（如周末、节假日），调整运营策略。',
+                    'title': t('insight_low_day_title', date=worst_day),
+                    'detail': t('insight_low_day_detail', amount=worst_amount, pct=pct_below),
                     'color': '#f8d7da'
                 })
 
@@ -200,8 +215,8 @@ class SalesAnalyzer:
                 insights.append({
                     'category': 'risk',
                     'emoji': '⭐',
-                    'title': f'产品集中度高: {percentage:.0f}%',
-                    'detail': f'"{top_product}" 占总销量的 {percentage:.0f}%（{int(top_quantity)} 件）。过度依赖单一产品存在风险，建议拓展产品线。',
+                    'title': t('insight_product_concentration_title', pct=percentage),
+                    'detail': t('insight_product_concentration_detail', product=top_product, pct=percentage, qty=int(top_quantity)),
                     'color': '#fff3cd'
                 })
 
@@ -216,8 +231,8 @@ class SalesAnalyzer:
                 insights.append({
                     'category': 'risk',
                     'emoji': '📍',
-                    'title': f'地区集中度高: {top_state} {state_percentage:.0f}%',
-                    'detail': f'{top_state} 州占总销售额的 {state_percentage:.0f}%（${top_state_amount:,.2f}）。地区过度集中存在风险，建议拓展其他市场。',
+                    'title': t('insight_region_concentration_title', state=top_state, pct=state_percentage),
+                    'detail': t('insight_region_concentration_detail', state=top_state, pct=state_percentage, amount=top_state_amount),
                     'color': '#fff3cd'
                 })
 
@@ -237,12 +252,13 @@ class SalesAnalyzer:
             if avg_weekend != 'N/A' and avg_weekday != 'N/A' and avg_weekend != 0 and avg_weekday != 0:
                 diff = safe_percentage_change(avg_weekend, avg_weekday)
                 if diff != 'N/A' and abs(diff) > 15:
-                    pattern = "周末" if diff > 0 else "工作日"
+                    pattern_key = t('insight_weekend_label') if diff > 0 else t('insight_weekday_label')
+                    opposite_key = t('insight_weekday_label') if diff > 0 else t('insight_weekend_label')
                     insights.append({
                         'category': 'trend',
                         'emoji': '📅',
-                        'title': f'{pattern}销售更强: {abs(diff):.0f}%',
-                        'detail': f'{pattern}的日均销售额比{"工作日" if pattern=="周末" else "周末"}高 {abs(diff):.0f}%。可针对性安排促销活动和库存。',
+                        'title': t('insight_weekend_pattern_title', pattern=pattern_key, diff=abs(diff)),
+                        'detail': t('insight_weekend_pattern_detail', pattern=pattern_key, opposite=opposite_key, diff=abs(diff)),
                         'color': '#d1ecf1'
                     })
 
@@ -257,8 +273,8 @@ class SalesAnalyzer:
                 insights.append({
                     'category': 'trend',
                     'emoji': '🏆',
-                    'title': f'Top 3产品贡献度: {top3_pct:.0f}%',
-                    'detail': f'Top 3 产品占总销量的 {top3_pct:.0f}%，显示出明显的"头部效应"。应重点维护这些明星产品的供应链和营销。',
+                    'title': t('insight_top3_contribution_title', pct=top3_pct),
+                    'detail': t('insight_top3_contribution_detail', pct=top3_pct),
                     'color': '#d1ecf1'
                 })
 
@@ -266,20 +282,20 @@ class SalesAnalyzer:
         if total_orders > 0 and avg_order != 'N/A' and avg_order != 0:
             # 客单价分类
             if avg_order < 30:
-                category_label = "低客单价高频次"
-                suggestion = "适合走量策略，可通过组合促销提升客单价"
+                category_label = t('insight_business_model_low_freq')
+                suggestion = t('insight_business_model_suggestion_low')
             elif avg_order < 80:
-                category_label = "中等客单价"
-                suggestion = "平衡型业务，可同时关注拉新和提升客单价"
+                category_label = t('insight_business_model_mid')
+                suggestion = t('insight_business_model_suggestion_mid')
             else:
-                category_label = "高客单价低频次"
-                suggestion = "适合精细化运营，注重客户关系维护"
+                category_label = t('insight_business_model_high_value')
+                suggestion = t('insight_business_model_suggestion_high')
 
             insights.append({
                 'category': 'trend',
                 'emoji': '💹',
-                'title': f'业务模式: {category_label}',
-                'detail': f'当前平均订单价值 ${avg_order:.2f}，共 {total_orders:,} 单。{suggestion}。',
+                'title': t('insight_business_model_title', category=category_label),
+                'detail': t('insight_business_model_detail', avg=avg_order, orders=total_orders, suggestion=suggestion),
                 'color': '#d1ecf1'
             })
 
@@ -293,8 +309,8 @@ class SalesAnalyzer:
                 insights.append({
                     'category': 'trend',
                     'emoji': '💰',
-                    'title': f'价格差异较大: CV={cv:.0f}%',
-                    'detail': f'产品价格变异系数为 {cv:.0f}%，说明价格跨度大。可考虑进行价格带分层管理，针对不同客群制定策略。',
+                    'title': t('insight_price_dispersion_title', cv=cv),
+                    'detail': t('insight_price_dispersion_detail', cv=cv),
                     'color': '#d1ecf1'
                 })
 
